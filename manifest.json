@@ -1,0 +1,24 @@
+{
+  "name": "Distribuidora Belén",
+  "short_name": "Dist. Belén",
+  "description": "Catálogo mayorista de bebidas y productos para el hogar. Pedidos directos por WhatsApp.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "1769018232590.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "1769018232590.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

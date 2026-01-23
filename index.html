@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distribuidora Belén - Catálogo Boutique</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('sw.js');
+        });
+      }
+    </script>
+    <style>
+        :root {
+            --primary: #000000;
+            --accent: #0056b3;
+            --bg: #ffffff;
+            --light-bg: #f9f9f9;
+            --text: #1a1a1a;
+            --muted: #707070;
+            --danger: #e11d48;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: var(--bg); color: var(--text); line-height: 1.6; }
+
+        /* NUEVA TOP BAR (Información de contacto) */
+        .top-bar {
+            background-color: var(--primary);
+            color: white;
+            padding: 8px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .top-bar-info { display: flex; gap: 20px; flex-wrap: wrap; }
+        .top-bar span { opacity: 0.9; }
+
+        /* NAVBAR */
+        .navbar {
+            background: var(--bg);
+            padding: 1rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 1000;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .navbar img { height: 40px; }
+
+        .cart-link {
+            font-size: 0.85rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1px; cursor: pointer; color: var(--primary);
+            padding: 8px 15px; border: 1px solid #eee; border-radius: 4px;
+            transition: 0.3s;
+        }
+        .cart-link:hover { background: var(--light-bg); }
+
+        /* BANNER */
+        .hero { padding: 2rem 5%; }
+        .main-banner {
+            width: 100%; max-width: 1200px; margin: 0 auto;
+            aspect-ratio: 21/9;
+            background: url('banner.jpg') center/contain no-repeat;
+            background-color: #f4f4f4;
+            border-radius: 4px;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 5% 5rem; }
+
+        .section-header { margin: 4rem 0 2rem; text-align: center; }
+        .section-header h2 {
+            font-size: 1.8rem; font-weight: 300; text-transform: uppercase;
+            letter-spacing: 4px; margin-bottom: 10px;
+        }
+        .section-header .line { width: 40px; height: 2px; background: var(--accent); margin: 0 auto; }
+
+        /* PRODUCT GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 40px;
+        }
+
+        .product-card {
+            background: var(--bg);
+            transition: 0.4s ease-in-out;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 25px;
+        }
+
+        .image-container {
+            background: var(--light-bg);
+            aspect-ratio: 1/1;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px; border-radius: 4px;
+            overflow: hidden; 
+            position: relative;
+        }
+
+        .image-container img { 
+            width: 75%; height: auto; object-fit: contain; 
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        .product-card:hover .image-container img { transform: scale(1.12); }
+
+        .product-title { font-size: 1.1rem; font-weight: 500; margin-bottom: 10px; height: 2.5rem; }
+        .product-price { font-size: 1.3rem; font-weight: 300; color: var(--accent); margin-bottom: 20px; }
+
+        /* CONTADORES */
+        .controls { display: flex; gap: 10px; align-items: center; }
+        .counter {
+            display: flex; align-items: center; border: 1px solid #ddd;
+            border-radius: 4px; height: 45px;
+        }
+        .counter button {
+            background: white; border: none; width: 35px; height: 100%;
+            cursor: pointer; font-size: 1.2rem;
+        }
+        .counter input {
+            width: 35px; border: none; text-align: center; font-weight: 600;
+            font-size: 1rem; outline: none;
+        }
+
+        .buy-button {
+            flex-grow: 1; height: 45px; background: var(--primary);
+            color: white; border: none; font-size: 0.75rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px; cursor: pointer;
+            border-radius: 4px; transition: 0.3s;
+        }
+        .buy-button:hover { background: var(--accent); }
+
+        /* MODAL CARRITO */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; backdrop-filter: blur(4px); }
+        .modal-body { 
+            max-width: 500px; margin: 5vh auto; background: white; 
+            padding: 40px; border-radius: 8px; position: relative;
+        }
+
+        .cart-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 0; border-bottom: 1px solid #f0f0f0;
+        }
+
+        .remove-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 1.2rem; }
+        .remove-btn:hover { color: var(--danger); }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .top-bar { flex-direction: column; text-align: center; gap: 5px; }
+            .top-bar-info { justify-content: center; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <span>LUN a SAB 08:30 - 13:00 / 17:00 - 21:00</span>
+        <div class="top-bar-info">
+            <span>Wp: 15-5566-5857</span>
+            <span>info@distribuidorabelen.com.ar</span>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <img src="1769018232590.png" alt="Distribuidora Belén">
+        <div class="cart-link" onclick="toggleCart()">
+            Mi Carrito (<span id="cCount">0</span>)
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="main-banner"></div>
+    </div>
+
+    <div class="container">
+        <div class="section-header"><h2>Gaseosas</h2><div class="line"></div></div>
+        <div id="grid-gaseosa" class="grid"></div>
+
+        <div class="section-header"><h2>Aguas Saborizadas</h2><div class="line"></div></div>
+        <div id="grid-aguasab" class="grid"></div>
+
+        <div class="section-header"><h2>Hogar</h2><div class="line"></div></div>
+        <div id="grid-hogar" class="grid"></div>
+    </div>
+
+    <div class="modal" id="cartModal">
+        <div class="modal-body">
+            <h2 style="font-weight: 300; text-transform: uppercase; margin-bottom: 20px;">Tu Selección</h2>
+            <div id="cartList" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 1rem; text-transform: uppercase;">Total</span>
+                <span style="font-size: 1.8rem; font-weight: 300;">$<span id="mTotal">0</span></span>
+            </div>
+            <button class="buy-button" style="margin-top:30px; background:#25D366; width:100%; height: 55px;" onclick="sendWhatsApp()">
+                Confirmar WhatsApp
+            </button>
+            <p onclick="toggleCart()" style="text-align:center; margin-top:20px; cursor:pointer; font-size:0.75rem; text-transform:uppercase; color:#999;">Volver</p>
+        </div>
+    </div>
+
+    <script>
+        const prods = [
+            {id:1, n:'Manaos Cola 600ml', p:3600, cat:'gaseosa', sub:'600ml', img:'manaos-600.png'},
+            {id:2, n:'Manaos Cola 1.5lt', p:5100, cat:'gaseosa', sub:'1.5lt', img:'manaos-15.png'},
+            {id:3, n:'Manaos Cola 2.25lt', p:6600, cat:'gaseosa', sub:'2.25lt', img:'manaos-225.png'},
+            {id:4, n:'Manaos Manzana 3lt', p:7800, cat:'gaseosa', sub:'3lt', img:'manaos-3.png'},
+            {id:5, n:'Placer Naranja 500ml', p:2800, cat:'aguasab', sub:'500ml', img:'placer-500.png'},
+            {id:6, n:'Placer Pera 1.5lt', p:4200, cat:'aguasab', sub:'1.5lt', img:'placer-15.png'},
+            {id:7, n:'Agua 20L Pura Vida', p:3200, cat:'hogar', sub:'20L', img:'agua-20l.png'},
+            {id:8, n:'Garrafa Gas 10kg', p:12800, cat:'hogar', sub:'Garrafa', img:'garrafa-15.png'}
+        ];
+
+        let cart = [];
+
+        function renderEditorial(cat) {
+            const grid = document.getElementById('grid-' + cat);
+            const filtered = prods.filter(p => p.cat === cat);
+            grid.innerHTML = filtered.map(x => `
+                <div class="product-card">
+                    <div class="image-container">
+                        <img src="${x.img}" onerror="this.src='https://via.placeholder.com/200?text=Cargar+PNG'">
+                    </div>
+                    <h3 class="product-title">${x.n}</h3>
+                    <p class="product-price">$${x.p.toLocaleString()}</p>
+                    <div class="controls">
+                        <div class="counter">
+                            <button onclick="changeQty(${x.id}, -1)">-</button>
+                            <input type="number" id="qty-${x.id}" value="1" min="1" readonly>
+                            <button onclick="changeQty(${x.id}, 1)">+</button>
+                        </div>
+                        <button class="buy-button" onclick="addToCart(${x.id})">Añadir</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function changeQty(id, delta) {
+            const input = document.getElementById('qty-' + id);
+            let val = parseInt(input.value) + delta;
+            if (val < 1) val = 1;
+            input.value = val;
+        }
+
+        function addToCart(id) {
+            const p = prods.find(x => x.id === id);
+            const qty = parseInt(document.getElementById('qty-' + id).value);
+            const inC = cart.find(x => x.id === id);
+            if(inC) inC.q += qty; else cart.push({...p, q:qty});
+            document.getElementById('qty-' + id).value = 1;
+            updateUI();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            updateUI();
+            drawCartList();
+        }
+
+        function updateUI() {
+            const count = cart.reduce((s, i) => s + i.q, 0);
+            const total = cart.reduce((s, i) => s + (i.p * i.q), 0);
+            document.getElementById('cCount').textContent = count;
+            document.getElementById('mTotal').textContent = total.toLocaleString();
+        }
+
+        function drawCartList() {
+            const list = document.getElementById('cartList');
+            if(cart.length === 0) { list.innerHTML = `<p style="text-align:center; padding:20px;">Vacio.</p>`; return; }
+            list.innerHTML = cart.map(i => `
+                <div class="cart-item">
+                    <div>
+                        <p style="font-weight:600">${i.n}</p>
+                        <span style="font-size:0.8rem">${i.q} fardos x $${i.p.toLocaleString()}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span>$${(i.p*i.q).toLocaleString()}</span>
+                        <button class="remove-btn" onclick="removeFromCart(${i.id})">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleCart() {
+            const m = document.getElementById('cartModal');
+            const isOpen = m.style.display === 'block';
+            m.style.display = isOpen ? 'none' : 'block';
+            if(!isOpen) drawCartList();
+        }
+
+        function sendWhatsApp() {
+            if(cart.length === 0) return;
+            let msg = "Consulta de pedido - Distribuidora Belén:%0A%0A";
+            cart.forEach(i => msg += `• ${i.n} (x${i.q} fardos)%0A`);
+            msg += `%0ATotal: $${document.getElementById('mTotal').textContent}`;
+            window.open(`https://wa.me/5491155665857?text=${msg}`);
+        }
+
+        renderEditorial('gaseosa');
+        renderEditorial('aguasab');
+        renderEditorial('hogar');
+    </script>
+</body>
+</html>
